@@ -21,6 +21,7 @@ markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
 ml-dtypes==0.4.1
+mysql-connector-python==9.1.0
 namex==0.0.8
 numpy==2.0.2
 opt_einsum==3.4.0
@@ -28,6 +29,7 @@ optree==0.13.1
 packaging==24.2
 protobuf==5.29.1
 Pygments==2.18.0
+python-dotenv==1.0.1
 requests==2.32.3
 rich==13.9.4
 scikit-learn==1.5.2

@@ -2,10 +2,28 @@ import os
 import joblib
 import locale
 import numpy as np
+import mysql.connector
 import tensorflow as tf
 from joblib import load
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 
+load_dotenv()
+
+# Database configuration
+DB_HOST = os.getenv('DB_HOST')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_NAME = os.getenv('DB_NAME')
+
+# Connect to the database
+def connect_to_database():
+    return mysql.connector.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME
+    )
 # Flask app
 app = Flask(__name__)
 
@@ -104,12 +122,33 @@ def predict():
         predicted_roundedup = rounded_up_to_nearest(denormalized_prediction[0][0])
         predicted_formatted = format_currency(predicted_roundedup)
 
-        # Kembalikan hasil prediksi
-        return jsonify({
+          # Kembalikan hasil prediksi
+        response_data = {
             "prediction": predicted_formatted,
             "raw_prediction": float(denormalized_prediction[0][0]),
             "message": f"Dengan melihat tujuan keuangan anda, kami merekomendasikan anda untuk menyisihkan sebesar {predicted_formatted} setiap bulannya."
-        })
+        }
+
+        # Simpan hasil ke database
+        try:
+            connection = connect_to_database()
+            cursor = connection.cursor()
+            query = """
+            INSERT INTO prediction (message, prediction, raw_prediction)
+            VALUES (%s, %s, %s)
+            """
+            cursor.execute(query, (
+                response_data["message"],
+                response_data["prediction"],
+                response_data["raw_prediction"]
+            ))
+            connection.commit()
+            cursor.close()
+            connection.close()
+        except Exception as db_error:
+            print(f"Database error: {db_error}")
+            
+        return jsonify(response_data)
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -117,6 +156,3 @@ def predict():
 if __name__ == '__main__':
     PORT = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=PORT, debug=True)
-
-   
-
