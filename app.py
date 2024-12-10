@@ -151,15 +151,9 @@ def predict():
 
             update_goal.execute("UPDATE goals set predict_goal = %s WHERE id_goal = %s", (result,id_goal))
             
-            # query = """
-            #  ( message )
-            # VALUES ( %s )
-            # """
-            # cursor.execute(query, (response_data["message"],))
+        
             connection.commit()
 
-            # cursor.close()
-            # connection.close()
         except Exception as db_error:
             print(f"Database error: {db_error}")
             
