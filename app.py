@@ -6,6 +6,7 @@ import mysql.connector
 import tensorflow as tf
 from joblib import load
 from dotenv import load_dotenv
+from datetime import datetime
 from flask import Flask, request, jsonify
 
 load_dotenv()
@@ -94,23 +95,45 @@ def denormalize_output(output_data, scaler_min, scaler_max):
     return output_data * (scaler_max - scaler_min) + scaler_min
 
 
-@app.route('/predict', methods=['POST'])
+@app.route('/money/goal/predict', methods=['POST'])
 def predict():
     try:
         # Ambil input dari JSON
         data = request.get_json()
-        goal_amount = data.get("goal_amount")
-        goal_duration = data.get("goal_duration")
-        current_savings = data.get("current_savings")
-        
-      
-        # Validasi input
-        if not all([goal_amount, goal_duration, current_savings]):
-            return jsonify({"error": "Input tidak lengkap. Mohon masukkan goal_amount, goal_duration, dan current_savings."}), 400
+        # goal_amount = data.get("goal_amount")
+        # goal_duration = data.get("goal_duration")
+        # current_savings = data.get("current_savings")
+        id_goal = data.get("id_goal")
 
+        connection = connect_to_database()
+        get_goal = connection.cursor()
+
+        get_goal.execute( "SELECT * FROM goals WHERE id_goal = %s", (id_goal,))
+        goal = get_goal.fetchone()
+        goal_amount = goal[4]
+        target = goal[5]
+        current_savings = goal[7]
+        created_at = goal[9]
+
+        # # Konversi string ke datetime
+        # date1 = datetime.strptime(target, "%Y-%m-%d %H:%M:%S")
+        # date2 = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
+
+        # Hitung selisih bulan
+        goal_duration = (target.year - created_at.year) * 12 + (target.month - created_at.month)
+        print(goal_duration)
+        print(goal)
+
+
+        # # Validasi input
+        # if not all([goal_amount, goal_duration, current_savings]):
+        #     return jsonify({"error": "Input tidak lengkap. Mohon masukkan goal_amount, goal_duration, dan current_savings."}), 400
+
+        
         # Siapkan data input untuk model
         input_data = np.array([[goal_amount, goal_duration, current_savings]])
 
+       
         # Normalisasi input
         normalized_input = scaler_X.transform(input_data)
 
@@ -122,7 +145,7 @@ def predict():
         predicted_roundedup = rounded_up_to_nearest(denormalized_prediction[0][0])
         predicted_formatted = format_currency(predicted_roundedup)
 
-          # Kembalikan hasil prediksi
+        # Kembalikan hasil prediksi
         response_data = {
             "prediction": predicted_formatted,
             "raw_prediction": float(denormalized_prediction[0][0]),
@@ -132,23 +155,25 @@ def predict():
         # Simpan hasil ke database
         try:
             connection = connect_to_database()
-            cursor = connection.cursor()
-            query = """
-            INSERT INTO prediction (message, prediction, raw_prediction)
-            VALUES (%s, %s, %s)
-            """
-            cursor.execute(query, (
-                response_data["message"],
-                response_data["prediction"],
-                response_data["raw_prediction"]
-            ))
+            update_goal = connection.cursor()
+
+            result= f"Dengan melihat tujuan keuangan anda, kami merekomendasikan anda untuk menyisihkan sebesar {predicted_formatted} setiap bulannya."
+
+            update_goal.execute("UPDATE goals set predict_goal = %s WHERE id_goal = %s", (result,id_goal))
+            
+            # query = """
+            #  ( message )
+            # VALUES ( %s )
+            # """
+            # cursor.execute(query, (response_data["message"],))
             connection.commit()
-            cursor.close()
-            connection.close()
+
+            # cursor.close()
+            # connection.close()
         except Exception as db_error:
             print(f"Database error: {db_error}")
             
-        return jsonify(response_data)
+        return jsonify(response_data,goal_amount,current_savings,goal_duration)
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
