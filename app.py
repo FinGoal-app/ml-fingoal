@@ -29,9 +29,9 @@ def connect_to_database():
 app = Flask(__name__)
 
 # Paths untuk file lokal
-model_path = "models/financial_goal_model.h5"
-scaler_X_path = "models/scaler_X.pkl"
-scaler_y_path = "models/scaler_y.pkl"
+model_path = "models/model1/financial_goal_model.h5"
+scaler_X_path = "models/model1/scaler_X.pkl"
+scaler_y_path = "models/model1/scaler_y.pkl"
 
 # URLs untuk file di Google Cloud Storage
 model_url = "https://storage.googleapis.com/fingoal-storage/model-h5/financial_goal_model.h5"
@@ -100,12 +100,13 @@ def predict():
     try:
      
         data = request.get_json()
- 
         id_goal = data.get("id_goal")
 
+        # Connect DB and set cursor
         connection = connect_to_database()
         get_goal = connection.cursor()
 
+        # Check data from DB
         get_goal.execute( "SELECT * FROM goals WHERE id_goal = %s", (id_goal,))
         goal = get_goal.fetchone()
         goal_amount = goal[4]
@@ -157,7 +158,7 @@ def predict():
         except Exception as db_error:
             print(f"Database error: {db_error}")
             
-        return jsonify(response_data,goal_amount,current_savings,goal_duration)
+        return jsonify(response_data)
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
