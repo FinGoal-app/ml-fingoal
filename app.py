@@ -98,11 +98,9 @@ def denormalize_output(output_data, scaler_min, scaler_max):
 @app.route('/money/goal/predict', methods=['POST'])
 def predict():
     try:
-        # Ambil input dari JSON
+     
         data = request.get_json()
-        # goal_amount = data.get("goal_amount")
-        # goal_duration = data.get("goal_duration")
-        # current_savings = data.get("current_savings")
+ 
         id_goal = data.get("id_goal")
 
         connection = connect_to_database()
@@ -115,19 +113,11 @@ def predict():
         current_savings = goal[7]
         created_at = goal[9]
 
-        # # Konversi string ke datetime
-        # date1 = datetime.strptime(target, "%Y-%m-%d %H:%M:%S")
-        # date2 = datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S")
 
         # Hitung selisih bulan
         goal_duration = (target.year - created_at.year) * 12 + (target.month - created_at.month)
         print(goal_duration)
         print(goal)
-
-
-        # # Validasi input
-        # if not all([goal_amount, goal_duration, current_savings]):
-        #     return jsonify({"error": "Input tidak lengkap. Mohon masukkan goal_amount, goal_duration, dan current_savings."}), 400
 
         
         # Siapkan data input untuk model
