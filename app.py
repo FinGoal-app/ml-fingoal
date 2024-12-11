@@ -1,6 +1,6 @@
 import os
 import joblib
-import locale
+# import locale
 import numpy as np
 import mysql.connector
 import tensorflow as tf
@@ -8,6 +8,7 @@ from joblib import load
 from dotenv import load_dotenv
 from datetime import datetime
 from flask import Flask, request, jsonify
+from babel.numbers import format_currency as babel_format_currency
 
 load_dotenv()
 
@@ -83,12 +84,12 @@ def rounded_up_to_nearest(value, nearest=100000):
     return (int(value / nearest) + 1) * nearest if value % nearest != 0 else int(value)
 
 # Fungsi format mata uang
+# Fungsi format mata uang
 def format_currency(value):
     """
-    Memformat nilai ke dalam bentuk mata uang Rupiah.
+    Memformat nilai ke dalam bentuk mata uang Rupiah menggunakan Babel.
     """
-    locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8') 
-    return locale.currency(value, grouping=True, symbol=True)
+    return babel_format_currency(value, 'IDR', locale='id_ID')
 
 # Fungsi untuk denormalisasi output
 def denormalize_output(output_data, scaler_min, scaler_max):

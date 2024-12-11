@@ -2,7 +2,7 @@ FROM python:3.12.3-slim
 
 # Set working directory
 WORKDIR /app
-ENV PORT = 3000
+ENV PORT=3000
 # Copy semua file ke dalam container
 COPY . .
 
