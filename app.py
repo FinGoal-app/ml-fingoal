@@ -140,7 +140,7 @@ def predict():
         response_data = {
             "prediction": predicted_formatted,
             "raw_prediction": float(denormalized_prediction[0][0]),
-            "message": f"Dengan melihat tujuan keuangan anda, kami merekomendasikan anda untuk menyisihkan sebesar {predicted_formatted} setiap bulannya."
+            "message": f"Considering your financial goals, we recommend that you set aside an amount of {predicted_formatted} every month."
         }
 
         # Simpan hasil ke database
@@ -148,7 +148,7 @@ def predict():
             connection = connect_to_database()
             update_goal = connection.cursor()
 
-            result= f"Dengan melihat tujuan keuangan anda, kami merekomendasikan anda untuk menyisihkan sebesar {predicted_formatted} setiap bulannya."
+            result= f"Considering your financial goals, we recommend that you set aside an amount of {predicted_formatted} every month."
 
             update_goal.execute("UPDATE goals set predict_goal = %s WHERE id_goal = %s", (result,id_goal))
             
